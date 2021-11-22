@@ -1,0 +1,27 @@
+{
+    "components": {
+        "bucket": {
+            "type": "ext",
+            "policy": {
+                "Version": "2012-10-17",
+                "Statement": [{
+                    "Sid": "Vis",
+                    "Effect": "Allow",
+                    "Action": [
+                        "iam:PassRole",
+                        "tag:GetResources",
+                        "lambda:CreateFunction",
+                        "lambda:DeleteFunction",
+                        "lambda:GetFunction",
+                        "lambda:Invoke",
+                        "lambda:InvokeAsync",
+                        "lambda:UpdateFunctionCode",
+                        "lambda:UpdateFunctionConfiguration",
+                        "s3:*"
+                    ],
+                    "Resource": "*"
+                }]
+            }
+        }
+    }
+}
