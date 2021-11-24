@@ -3,6 +3,7 @@
         "bucket": {
             "type": "ext",
             "displayname": "CK S3 Bucket",
+            "description": "Deploys an AWS S3 Bucket. S3 Buckets provide scalable flat file storage",
             "cloud": "AWS",
             "resources": ["AWS::s3::bucket"],
             "policy": {
