@@ -69,8 +69,21 @@ def get_bucket(bucket_name, cdef, region, prev_state):
             return None
     
     try:
+        s3_resource = boto3.resource("s3")
+        s3_resource.meta.client.head_bucket(Bucket=bucket_name)
+    except ClientError as e:
+        if e.response['Error']['Code'] in ["NoSuchBucket", "NoSuchBucketException"]:
+            eh.add_log("Bucket Does Not Exist", {"name": bucket_name})
+            eh.add_op("create_bucket")
+            return 0
+        else:
+            eh.add_log("Get Bucket Error", {"error": str(e)})
+            eh.retry_error("Get Bucket Error", 30)
+            return 0
+
+    try:
         response = s3.get_bucket_versioning(Bucket=bucket_name)
-        eh.add_log("Got Bucket", response)
+        eh.add_log("Got Bucket Versioning", response)
         versioning = not ((not response.get("Status")) or (response.get("Status") == "Suspended"))
         want_versioning = bool(cdef.get("versioning"))
         if versioning != want_versioning:
