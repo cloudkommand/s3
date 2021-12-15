@@ -74,12 +74,13 @@ def get_bucket(bucket_name, cdef, region, prev_state):
         s3_resource = boto3.resource("s3")
         s3_resource.meta.client.head_bucket(Bucket=bucket_name)
     except ClientError as e:
-        if e.response['Error']['Code'] in ["NoSuchBucket", "NoSuchBucketException"]:
+        if int(e.response['Error']['Code']) == 404:
             eh.add_log("Bucket Does Not Exist", {"name": bucket_name})
             eh.add_op("create_bucket")
             return 0
         else:
-            eh.add_log("Get Bucket Error", {"error": str(e)})
+            print(str(e))
+            eh.add_log("Get Bucket Error", {"error": str(e)}, is_error=True)
             eh.retry_error("Get Bucket Error", 30)
             return 0
 
