@@ -7,6 +7,8 @@ import traceback
 from extutil import remove_none_attributes, account_context, ExtensionHandler, ext, \
     current_epoch_time_usec_num, component_safe_name
 
+from botocore.exceptions import ClientError
+
 eh = ExtensionHandler()
 
 def lambda_handler(event, context):
