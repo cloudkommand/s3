@@ -72,7 +72,10 @@ def get_bucket(bucket_name, cdef, region, prev_state):
     
     try:
         s3_resource = boto3.resource("s3")
-        s3_resource.meta.client.head_bucket(Bucket=bucket_name)
+        response = s3_resource.meta.client.head_bucket(Bucket=bucket_name)
+        if response:
+            print(response)
+            eh.add_props({"region": response['ResponseMetadata']['HTTPHeaders']['x-amz-bucket-region']})
     except ClientError as e:
         if int(e.response['Error']['Code']) == 404:
             eh.add_log("Bucket Does Not Exist", {"name": bucket_name})
