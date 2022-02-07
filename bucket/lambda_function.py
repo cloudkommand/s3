@@ -22,7 +22,7 @@ def lambda_handler(event, context):
         project_code = event.get("project_code")
         repo_id = event.get("repo_id")
         cname = event.get("component_name")
-        bucket_name = cdef.get("name") or component_safe_name(project_code, repo_id, cname)
+        bucket_name = cdef.get("name") or component_safe_name(project_code, repo_id, cname, no_underscores=True, max_chars=63)
     
         pass_back_data = event.get("pass_back_data", {})
         if pass_back_data:
