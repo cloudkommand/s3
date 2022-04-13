@@ -16,21 +16,20 @@ def lambda_handler(event, context):
         print(f"event = {event}")
         # account_number = account_context(context)['number']
         region = account_context(context)['region']
-        eh.refresh()
+        eh.capture_event(event)
         prev_state = event.get("prev_state")
         cdef = event.get("component_def")
         project_code = event.get("project_code")
         repo_id = event.get("repo_id")
         cname = event.get("component_name")
-        bucket_name = cdef.get("name") or component_safe_name(project_code, repo_id, cname, no_underscores=True, max_chars=63)
-        print(bucket_name)
+        bucket_name = eh.props.get("name") or cdef.get("name") or component_safe_name(project_code, repo_id, cname, no_underscores=True, max_chars=63)
+        print(f"bucket_name = {bucket_name}")
 
         pass_back_data = event.get("pass_back_data", {})
         if pass_back_data:
-            eh.declare_pass_back_data(pass_back_data)
+            pass
         elif event.get("op") == "upsert":
             eh.add_op("get_bucket")
-
         elif event.get("op") == "delete":
             eh.add_op("delete_bucket")
 
