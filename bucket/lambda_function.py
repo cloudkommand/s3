@@ -541,7 +541,7 @@ def gen_bucket_arn(bucket_name):
     return f"arn:aws:s3:::{bucket_name}"
 
 def gen_bucket_link(bucket_name):
-    return f"https://https://s3.console.aws.amazon.com/s3/buckets/{bucket_name}?region=us-east-1&tab=objects"
+    return f"https://s3.console.aws.amazon.com/s3/buckets/{bucket_name}?region=us-east-1&tab=objects"
 
 
 def render_bucket_policy(policy, bucket_name):
