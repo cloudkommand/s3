@@ -185,6 +185,7 @@ def create_bucket(bucket_name, cdef, region):
         eh.add_props({
             "name": bucket_name,
             "arn": gen_bucket_arn(bucket_name),
+            "all_objects_arn": gen_bucket_arn(bucket_name) + "/*"
             "region": region
         })
 
