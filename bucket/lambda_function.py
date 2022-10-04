@@ -98,6 +98,7 @@ def get_bucket(bucket_name, cdef, region, prev_state):
         eh.add_props({
             "name": bucket_name,
             "arn":gen_bucket_arn(bucket_name),
+            "all_objects_arn": gen_bucket_arn(bucket_name) + "/*"
         })
 
         if prev_state and prev_state.get("props") and prev_state.get("props").get("region"):
