@@ -548,7 +548,9 @@ def put_bucket_notification_configuration(bucket_name, cdef):
     not_config = {}
     for config in notification_config:
         if config.get("arn").startswith("arn:aws:lambda"):
-            not_config["LambdaFunctionConfigurations"] = remove_none_attributes({
+            if not not_config.get("LambdaFunctionConfigurations"):
+                not_config["LambdaFunctionConfigurations"] = []
+            not_config["LambdaFunctionConfigurations"].append(remove_none_attributes({
                 "LambdaFunctionArn": config.get("arn"),
                 "Events": config.get("events"),
                 "Filter": remove_none_attributes({
@@ -566,10 +568,12 @@ def put_bucket_notification_configuration(bucket_name, cdef):
                         ]) or None
                     }) or None
                 }) or None
-            })
+            }))
         
         elif config.get("arn").startswith("arn:aws:sqs"):
-            not_config["QueueConfigurations"] = remove_none_attributes({
+            if not "QueueConfigurations" in not_config:
+                not_config["QueueConfigurations"] = []
+            not_config["QueueConfigurations"].append(remove_none_attributes({
                 "QueueArn": config.get("arn"),
                 "Events": config.get("events"),
                 "Filter": remove_none_attributes({
@@ -587,10 +591,12 @@ def put_bucket_notification_configuration(bucket_name, cdef):
                         ]) or None
                     }) or None
                 }) or None
-            })
+            }))
 
         elif config.get("arn").startswith("arn:aws:sns"):
-            not_config["TopicConfigurations"] = remove_none_attributes({
+            if not not_config.get("TopicConfigurations"):
+                not_config["TopicConfigurations"] = []
+            not_config["TopicConfigurations"].append(remove_none_attributes({
                 "TopicArn": config.get("arn"),
                 "Events": config.get("events"),
                 "Filter": remove_none_attributes({
@@ -608,7 +614,8 @@ def put_bucket_notification_configuration(bucket_name, cdef):
                         ]) or None
                     }) or None
                 }) or None
-            })
+            }))
+
 
     params = {
         "Bucket": bucket_name,
