@@ -619,10 +619,7 @@ def put_bucket_notification_configuration(bucket_name, cdef):
     print(f"params = {params}")
 
     try:
-        _ = s3.put_bucket_notification_configuration(
-            Bucket=bucket_name,
-            NotificationConfiguration=params
-        )
+        _ = s3.put_bucket_notification_configuration(**params)
         eh.add_log("Notification Config Set", {"config": notification_config})
 
     except ClientError as e:
