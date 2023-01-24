@@ -557,12 +557,12 @@ def put_bucket_notification_configuration(bucket_name, cdef):
                             remove_none_attributes({
                                 "Name": "prefix",
                                 "Value": prefix
-                            }) for prefix in config.get("filter_prefixes")
+                            }) for prefix in config.get("filter_prefixes", [])
                         ] + [
                             remove_none_attributes({
                                 "Name": "suffix",
                                 "Value": suffix
-                            }) for suffix in config.get("filter_suffixes")
+                            }) for suffix in config.get("filter_suffixes", [])
                         ]) or None
                     }) or None
                 }) or None
@@ -578,12 +578,12 @@ def put_bucket_notification_configuration(bucket_name, cdef):
                             remove_none_attributes({
                                 "Name": "prefix",
                                 "Value": prefix
-                            }) for prefix in config.get("filter_prefixes")
+                            }) for prefix in config.get("filter_prefixes", [])
                         ] + [
                             remove_none_attributes({
                                 "Name": "suffix",
                                 "Value": suffix
-                            }) for suffix in config.get("filter_suffixes")
+                            }) for suffix in config.get("filter_suffixes", [])
                         ]) or None
                     }) or None
                 }) or None
@@ -599,7 +599,7 @@ def put_bucket_notification_configuration(bucket_name, cdef):
                             remove_none_attributes({
                                 "Name": "prefix",
                                 "Value": prefix
-                            }) for prefix in config.get("filter_prefixes")
+                            }) for prefix in config.get("filter_prefixes", [])
                         ] + [
                             remove_none_attributes({
                                 "Name": "suffix",
