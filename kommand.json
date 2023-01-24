@@ -115,6 +115,41 @@
                                 "description": "See https://docs.aws.amazon.com/AmazonS3/latest/userguide/how-to-page-redirect.html#advanced-conditional-redirects to see how to write advanced redirect rules"
                             }
                         }
+                    },
+                    "notification_configuration": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "arn": {
+                                    "type": "string",
+                                    "description": "The ARN of the SNS topic, Lambda function, or SQS queue to send notifications to"
+                                },
+                                "events": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": ["s3:ObjectCreated:*", "s3:ObjectCreated:Put", "s3:ObjectCreated:Post", "s3:ObjectCreated:Copy", "s3:ObjectCreated:CompleteMultipartUpload", "s3:ObjectRemoved:*", "s3:ObjectRemoved:Delete", "s3:ObjectRemoved:DeleteMarkerCreated", "s3:ObjectRestore:Post", "s3:ObjectRestore:Completed", "s3:ReducedRedundancyLostObject"]
+                                    },
+                                    "description": "The events that will trigger the notification"
+                                },
+                                "filter_prefixes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "description": "The object prefixes that will trigger the notification"
+                                },
+                                "filter_suffixes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "description": "The object suffixes that will trigger the notification"
+                                }
+                            },
+                            "required": ["arn", "events"]
+                        }
                     }
                 }
             },
