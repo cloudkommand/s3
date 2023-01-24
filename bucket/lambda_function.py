@@ -637,7 +637,7 @@ def delete_bucket_notification_configuration(bucket_name):
     s3 = boto3.client("s3")
 
     try:
-        _ = s3.delete_bucket_notification_configuration(Bucket=bucket_name)
+        _ = s3.put_bucket_notification_configuration(Bucket=bucket_name, NotificationConfiguration={})
         eh.add_log("Notification Config Deleted", {"bucket_name": bucket_name})
 
     except ClientError as e:
