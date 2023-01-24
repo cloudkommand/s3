@@ -190,6 +190,9 @@ def create_bucket(bucket_name, cdef, region):
         if cdef.get("website_configuration"):
             eh.add_op("put_bucket_website")
 
+        if cdef.get("notification_configuration"):
+            eh.add_op("put_bucket_notification_configuration")
+
         eh.add_props({
             "name": bucket_name,
             "arn": gen_bucket_arn(bucket_name),
