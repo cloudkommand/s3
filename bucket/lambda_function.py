@@ -553,7 +553,7 @@ def put_bucket_notification_configuration(bucket_name, cdef):
                 "Events": config.get("events"),
                 "Filter": remove_none_attributes({
                     "Key": remove_none_attributes({
-                        "FilterRules": [
+                        "FilterRules": ([
                             remove_none_attributes({
                                 "Name": "prefix",
                                 "Value": prefix
@@ -563,7 +563,7 @@ def put_bucket_notification_configuration(bucket_name, cdef):
                                 "Name": "suffix",
                                 "Value": suffix
                             }) for suffix in config.get("filter_suffixes")
-                        ] or None
+                        ]) or None
                     }) or None
                 }) or None
             })
@@ -574,7 +574,7 @@ def put_bucket_notification_configuration(bucket_name, cdef):
                 "Events": config.get("events"),
                 "Filter": remove_none_attributes({
                     "Key": remove_none_attributes({
-                        "FilterRules": [
+                        "FilterRules": ([
                             remove_none_attributes({
                                 "Name": "prefix",
                                 "Value": prefix
@@ -584,7 +584,7 @@ def put_bucket_notification_configuration(bucket_name, cdef):
                                 "Name": "suffix",
                                 "Value": suffix
                             }) for suffix in config.get("filter_suffixes")
-                        ] or None
+                        ]) or None
                     }) or None
                 }) or None
             })
@@ -595,7 +595,7 @@ def put_bucket_notification_configuration(bucket_name, cdef):
                 "Events": config.get("events"),
                 "Filter": remove_none_attributes({
                     "Key": remove_none_attributes({
-                        "FilterRules": [
+                        "FilterRules": ([
                             remove_none_attributes({
                                 "Name": "prefix",
                                 "Value": prefix
@@ -605,7 +605,7 @@ def put_bucket_notification_configuration(bucket_name, cdef):
                                 "Name": "suffix",
                                 "Value": suffix
                             }) for suffix in config.get("filter_suffixes")
-                        ] or None
+                        ]) or None
                     }) or None
                 }) or None
             })
