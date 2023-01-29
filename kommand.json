@@ -14,7 +14,6 @@
                     "Action": [
                         "s3:CreateBucket",
                         "s3:DeleteBucket",
-                        "s3:DeleteBucketNotification",
                         "s3:DeleteBucketPolicy",
                         "s3:DeleteBucketWebsite",
                         "s3:DeleteObject",
@@ -38,7 +37,6 @@
                         "s3:ListBucketVersions",
                         "s3:PutBucketAcl",
                         "s3:PutBucketCORS",
-                        "s3:PutBucketNotification",
                         "s3:PutBucketPolicy",
                         "s3:PutBucketPublicAccessBlock",
                         "s3:PutBucketTagging",
@@ -158,6 +156,10 @@
                     "type": "string",
                     "description": "The ARN of the S3 bucket"
                 },
+                "all_objects_arn": {
+                    "type": "string",
+                    "description": "The ARN of the S3 bucket, with a wildcard for all objects. Often necessary along with the bucket arn"
+                },
                 "name": {
                     "type": "string",
                     "description": "The name of the S3 bucket"
@@ -167,6 +169,79 @@
                     "description": "The region in which this S3 bucket was deployed"
                 }
             }
+        },
+        "bucket_notification": {
+            "type": "ext",
+            "displayname": "CK S3 Bucket Notification Configuration",
+            "description": "Deploys an AWS S3 Bucket Notification Configuration. This is a separate resource from the bucket itself, and can be used to configure notifications on an existing bucket.",
+            "cloud": "AWS",
+            "resources": ["AWS::s3::bucketnotificationconfiguration"],
+            "policy": {
+                "Version": "2012-10-17",
+                "Statement": [{
+                    "Sid": "Vis",
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:DeleteBucketNotification",
+                        "s3:GetBucketAcl",
+                        "s3:GetBucketCORS",
+                        "s3:GetBucketLocation",
+                        "s3:GetBucketOwnershipControls",
+                        "s3:GetBucketPolicy",
+                        "s3:GetBucketPolicyStatus",
+                        "s3:ListBucket",
+                        "s3:ListBucketVersions",
+                        "s3:PutBucketNotification"
+                    ],
+                    "Resource": "*"
+                }]
+            },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "bucket_name": {
+                        "type": "string",
+                        "description": "The name of the bucket to put this configuration on."
+                    },
+                    "notification_configuration": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "arn": {
+                                    "type": "string",
+                                    "description": "The ARN of the SNS topic, Lambda function, or SQS queue to send notifications to"
+                                },
+                                "events": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": ["s3:ObjectCreated:*", "s3:ObjectCreated:Put", "s3:ObjectCreated:Post", "s3:ObjectCreated:Copy", "s3:ObjectCreated:CompleteMultipartUpload", "s3:ObjectRemoved:*", "s3:ObjectRemoved:Delete", "s3:ObjectRemoved:DeleteMarkerCreated", "s3:ObjectRestore:Post", "s3:ObjectRestore:Completed", "s3:ReducedRedundancyLostObject"]
+                                    },
+                                    "description": "The events that will trigger the notification"
+                                },
+                                "filter_prefixes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "description": "The object prefixes that will trigger the notification"
+                                },
+                                "filter_suffixes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "description": "The object suffixes that will trigger the notification"
+                                }
+                            },
+                            "required": ["arn", "events"]
+                        }
+                    }
+                },
+                "required": ["bucket_name"]
+            },
+            "props": {}
         }
     }
 }
