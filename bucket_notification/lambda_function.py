@@ -14,13 +14,22 @@ eh = ExtensionHandler()
 
 s3 = boto3.client("s3")
 
+# Notification configuration:
+# Looks like the following:
+# [
+#    {
+#        "arn": <either a function arn, a queue arn, or a topic arn>,
+#        "events": [<list of events>],
+#        "filter_prefixes": [<list of prefixes>],
+#        "filter_suffixes": [<list of suffixes>]
+#    }
+# ]
+
 def lambda_handler(event, context):
     try:
         print(f"event = {event}")
-        # account_number = account_context(context)['number']
-        # region = account_context(context)['region']
+
         eh.capture_event(event)
-        # prev_state = event.get("prev_state")
         cdef = event.get("component_def")
         project_code = event.get("project_code")
         repo_id = event.get("repo_id")
@@ -28,7 +37,7 @@ def lambda_handler(event, context):
         bucket_name = cdef.get("bucket_name")
         if not bucket_name:
             eh.perm_error("Bucket name is required", 0)
-        print(f"bucket_name = {bucket_name}")
+            return eh.finish()
 
         pass_back_data = event.get("pass_back_data", {})
         if pass_back_data:
@@ -56,15 +65,7 @@ def lambda_handler(event, context):
 @ext(handler=eh, op="put_bucket_notification_configuration")
 def put_bucket_notification_configuration(bucket_name, cdef):
     notification_config = cdef.get("notification_configuration")
-    # Looks like the following:
-    # [
-    #    {
-    #        "arn": <either a function arn, a queue arn, or a topic arn>,
-    #        "events": [<list of events>],
-    #        "filter_prefixes": [<list of prefixes>],
-    #        "filter_suffixes": [<list of suffixes>]
-    #    }
-    # ]
+
 
     print(f"notification_config = {notification_config}")
 
