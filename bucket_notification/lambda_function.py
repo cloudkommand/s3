@@ -25,7 +25,9 @@ def lambda_handler(event, context):
         project_code = event.get("project_code")
         repo_id = event.get("repo_id")
         cname = event.get("component_name")
-        bucket_name = eh.props.get("name") or cdef.get("name") or component_safe_name(project_code, repo_id, cname, no_underscores=True, no_uppercase=True, max_chars=63)
+        bucket_name = cdef.get("bucket_name")
+        if not bucket_name:
+            eh.perm_error("Bucket name is required", 0)
         print(f"bucket_name = {bucket_name}")
 
         pass_back_data = event.get("pass_back_data", {})
