@@ -156,6 +156,10 @@
                     "type": "string",
                     "description": "The ARN of the S3 bucket"
                 },
+                "all_objects_arn": {
+                    "type": "string",
+                    "description": "The ARN of the S3 bucket, with a wildcard for all objects. Often necessary along with the bucket arn"
+                },
                 "name": {
                     "type": "string",
                     "description": "The name of the S3 bucket"
