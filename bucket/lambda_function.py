@@ -21,12 +21,12 @@ def lambda_handler(event, context):
         # account_number = account_context(context)['number']
         region = account_context(context)['region']
         eh.capture_event(event)
-        prev_state = event.get("prev_state")
+        prev_state = event.get("prev_state") or {}
         cdef = event.get("component_def")
         project_code = event.get("project_code")
         repo_id = event.get("repo_id")
         cname = event.get("component_name")
-        bucket_name = eh.props.get("name") or cdef.get("name") or component_safe_name(project_code, repo_id, cname, no_underscores=True, no_uppercase=True, max_chars=63)
+        bucket_name = prev_state.get("props", {}).get("name") or cdef.get("name") or component_safe_name(project_code, repo_id, cname, no_underscores=True, no_uppercase=True, max_chars=63)
         allow_alternate_bucket_name = cdef.get("allow_alternate_bucket_name") or True
         print(f"bucket_name = {bucket_name}")
 
@@ -542,6 +542,7 @@ def delete_bucket_website():
 @ext(handler=eh, op="delete_bucket")
 def delete_bucket():
     bucket_name = eh.state.get("bucket_name")
+    print(bucket_name)
     try:
         s3 = boto3.resource('s3')
         s3_bucket = s3.Bucket(bucket_name)
