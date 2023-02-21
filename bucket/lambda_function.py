@@ -558,8 +558,11 @@ def delete_bucket():
         eh.add_log("Deleted Bucket", {"bucket_name": bucket_name})
 
     except botocore.exceptions.ClientError as e:
-        print(str(e))
-        eh.retry_error(str(e))
+        if e.response['Error']['Code'] == "NoSuchBucket":
+            eh.add_log("Bucket Does Not Exist, Continuing")
+        else:
+            print(str(e))
+            eh.retry_error(str(e))
         
 
 def gen_bucket_arn(bucket_name):
