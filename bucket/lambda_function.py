@@ -6,11 +6,14 @@ import traceback
 import fastjsonschema
 
 from extutil import remove_none_attributes, account_context, ExtensionHandler, ext, \
-    current_epoch_time_usec_num, component_safe_name, handle_common_errors
+    current_epoch_time_usec_num, component_safe_name, handle_common_errors, \
+    random_id
 
 from botocore.exceptions import ClientError
 
 eh = ExtensionHandler()
+
+s3 = boto3.client('s3')
 
 def lambda_handler(event, context):
     try:
@@ -18,13 +21,18 @@ def lambda_handler(event, context):
         # account_number = account_context(context)['number']
         region = account_context(context)['region']
         eh.capture_event(event)
-        prev_state = event.get("prev_state")
+        prev_state = event.get("prev_state") or {}
         cdef = event.get("component_def")
         project_code = event.get("project_code")
         repo_id = event.get("repo_id")
         cname = event.get("component_name")
-        bucket_name = eh.props.get("name") or cdef.get("name") or component_safe_name(project_code, repo_id, cname, no_underscores=True, no_uppercase=True, max_chars=63)
+        bucket_name = prev_state.get("props", {}).get("name") or cdef.get("name") or component_safe_name(project_code, repo_id, cname, no_underscores=True, no_uppercase=True, max_chars=63)
+        allow_alternate_bucket_name = cdef.get("allow_alternate_bucket_name") or True
         print(f"bucket_name = {bucket_name}")
+
+        # Supporting alternate bucket names
+        if not eh.state.get("bucket_name"):
+            eh.state["bucket_name"] = bucket_name
 
         pass_back_data = event.get("pass_back_data", {})
         if pass_back_data:
@@ -34,20 +42,20 @@ def lambda_handler(event, context):
         elif event.get("op") == "delete":
             eh.add_op("delete_bucket")
 
-        get_bucket(bucket_name, cdef, region, prev_state)
-        create_bucket(bucket_name, cdef, region)
-        set_public_access_block(bucket_name, cdef)
-        delete_public_access_block(bucket_name)
-        set_bucket_policy(bucket_name, cdef)
-        delete_bucket_policy(bucket_name)
-        set_versioning(bucket_name, cdef)
-        set_cors(bucket_name, cdef)
-        delete_cors(bucket_name)
-        set_tags(bucket_name)
-        remove_all_tags(bucket_name)
-        put_bucket_website(bucket_name, cdef)
-        delete_bucket_website(bucket_name)
-        delete_bucket(bucket_name)
+        get_bucket(cdef, region, prev_state)
+        create_bucket(cdef, region, allow_alternate_bucket_name)
+        set_public_access_block(cdef)
+        delete_public_access_block()
+        set_bucket_policy(cdef)
+        delete_bucket_policy()
+        set_versioning(cdef)
+        set_cors(cdef)
+        delete_cors()
+        set_tags()
+        remove_all_tags()
+        put_bucket_website(cdef)
+        delete_bucket_website()
+        delete_bucket()
 
         return eh.finish()
 
@@ -62,8 +70,8 @@ def format_tags(tags_dict):
     return [{"Key": k, "Value": v} for k,v in tags_dict.items()]
 
 @ext(handler=eh, op="get_bucket")
-def get_bucket(bucket_name, cdef, region, prev_state):
-    s3 = boto3.client("s3")
+def get_bucket(cdef, region, prev_state):
+    bucket_name = eh.state.get("bucket_name")
 
     if prev_state and prev_state.get("props") and prev_state.get("props").get("name"):
         prev_bucket_name = prev_state.get("props").get("name")
@@ -81,6 +89,14 @@ def get_bucket(bucket_name, cdef, region, prev_state):
         if int(e.response['Error']['Code']) == 404:
             eh.add_log("Bucket Does Not Exist", {"name": bucket_name})
             eh.add_op("create_bucket")
+            return 0
+        elif int(e.response['Error']['Code']) == 403:
+            eh.add_log("Bucket Owned By Other Account", {"name": bucket_name})
+            if cdef.get("allow_alternate_bucket_name"):
+                eh.state['bucket_name'] = generate_alternate_bucket_name()
+                eh.add_op("create_bucket")
+            else:
+                eh.perm_error("Bucket Owned By Another Account", 0)
             return 0
         else:
             print(str(e))
@@ -148,8 +164,8 @@ def get_bucket(bucket_name, cdef, region, prev_state):
             
 
 @ext(handler=eh, op="create_bucket")
-def create_bucket(bucket_name, cdef, region):
-    s3 = boto3.client("s3")
+def create_bucket(cdef, region, allow_alternate_bucket_name):
+    bucket_name = eh.state.get("bucket_name")
 
     print(f"region = {region}")
     params = remove_none_attributes({
@@ -195,8 +211,13 @@ def create_bucket(bucket_name, cdef, region):
 
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] == "BucketAlreadyExists":
-            eh.perm_error(f"Bucket {bucket_name} Already Exists", 0)
-            eh.add_log("Bucket Already Exists, Exiting", {"error": str(e)}, is_error=True)
+            if allow_alternate_bucket_name:
+                eh.add_log("Bucket Owned By Other Account, Switching", {"bucket_name": bucket_name})
+                eh.state['bucket_name'] = generate_alternate_bucket_name()
+                create_bucket(cdef, region, allow_alternate_bucket_name)
+            else:
+                eh.perm_error(f"Bucket {bucket_name} Already Exists", 0)
+                eh.add_log("Bucket Owned By Other Account, Exiting", {"error": str(e)}, is_error=True)
         elif e.response['Error']['Code'] == "BucketAlreadyOwnedByYou":
             eh.add_log("Bucket Already in this Account", {"error": str(e)})
         else:
@@ -206,8 +227,8 @@ def create_bucket(bucket_name, cdef, region):
 
 
 @ext(handler=eh, op="set_bucket_acl")
-def set_bucket_acl(bucket_name, cdef):
-    s3 = boto3.client("s3")
+def set_bucket_acl(cdef):
+    bucket_name = eh.state.get("bucket_name")
 
     if cdef.get("public_read") == True:
         params = {
@@ -240,8 +261,8 @@ def set_bucket_acl(bucket_name, cdef):
 
 
 @ext(handler=eh, op="set_public_access_block")
-def set_public_access_block(bucket_name, cdef):
-    s3 = boto3.client("s3")
+def set_public_access_block(cdef):
+    bucket_name = eh.state.get("bucket_name")
 
     if (cdef.get("block_public_access") == True or cdef.get("public_access_block") == True):
         public_access_block = {
@@ -272,8 +293,8 @@ def set_public_access_block(bucket_name, cdef):
             eh.add_log("Public Access Block Error", {"error": str(e)}, is_error=True)
 
 @ext(handler=eh, op="delete_public_access_block")
-def delete_public_access_block(bucket_name):
-    s3 = boto3.client("s3")
+def delete_public_access_block():
+    bucket_name = eh.state.get("bucket_name")
 
     try:
         _ = s3.delete_public_access_block(Bucket=bucket_name)
@@ -294,8 +315,8 @@ def delete_public_access_block(bucket_name):
 
 
 @ext(handler=eh, op="set_bucket_policy")
-def set_bucket_policy(bucket_name, cdef):
-    s3 = boto3.client("s3")
+def set_bucket_policy(cdef):
+    bucket_name = eh.state.get("bucket_name")
 
     bucket_policy = render_bucket_policy(cdef.get("bucket_policy"), bucket_name)
     try:
@@ -316,8 +337,8 @@ def set_bucket_policy(bucket_name, cdef):
             eh.add_log("Bucket Policy Error", {"error": str(e)}, is_error=True)
 
 @ext(handler=eh, op="delete_bucket_policy")
-def delete_bucket_policy(bucket_name):
-    s3 = boto3.client("s3")
+def delete_bucket_policy():
+    bucket_name = eh.state.get("bucket_name")
 
     try:
         response = s3.delete_bucket_policy(Bucket=bucket_name)
@@ -338,8 +359,8 @@ def delete_bucket_policy(bucket_name):
 
 
 @ext(handler=eh, op="set_versioning")
-def set_versioning(bucket_name, cdef):
-    s3 = boto3.client("s3")
+def set_versioning(cdef):
+    bucket_name = eh.state.get("bucket_name")
 
     versioning = cdef.get("versioning")
     config = {"Status": "Enabled" if versioning else "Suspended"}
@@ -363,8 +384,8 @@ def set_versioning(bucket_name, cdef):
             eh.add_log("Bucket Versioning Error", {"error": str(e)}, is_error=True)
 
 @ext(handler=eh, op="set_cors")
-def set_cors(bucket_name, cdef):
-    s3 = boto3.client("s3")
+def set_cors(cdef):
+    bucket_name = eh.state.get("bucket_name")
 
     if cdef.get("CORS") == True:
         cors_config = {"CORSRules": [
@@ -398,8 +419,8 @@ def set_cors(bucket_name, cdef):
             eh.add_log("Bucket CORS Error", {"error": str(e)}, is_error=True)
 
 @ext(handler=eh, op="delete_cors")
-def delete_cors(bucket_name):
-    s3 = boto3.client("s3")
+def delete_cors():
+    bucket_name = eh.state.get("bucket_name")
 
     try:
         response = s3.delete_bucket_cors(Bucket=bucket_name)
@@ -419,8 +440,8 @@ def delete_cors(bucket_name):
             eh.add_log("Bucket CORS Error", {"error": str(e)}, is_error=True)
 
 @ext(handler=eh, op="set_tags")
-def set_tags(bucket_name):
-    s3 = boto3.client("s3")
+def set_tags():
+    bucket_name = eh.state.get("bucket_name")
 
     formatted_tags = format_tags(eh.ops['set_tags'])
 
@@ -441,8 +462,8 @@ def set_tags(bucket_name):
             eh.add_log("Bucket Tags Error", {"error": str(e)}, is_error=True)
 
 @ext(handler=eh, op="remove_all_tags")
-def remove_all_tags(bucket_name):
-    s3 = boto3.client("s3")
+def remove_all_tags():
+    bucket_name = eh.state.get("bucket_name")
 
     try:
         _ = s3.delete_bucket_tagging(Bucket=bucket_name)
@@ -458,8 +479,8 @@ def remove_all_tags(bucket_name):
             eh.add_log("Bucket Tags Error", {"error": str(e)}, is_error=True)
 
 @ext(handler=eh, op="put_bucket_website")
-def put_bucket_website(bucket_name, cdef):
-    s3 = boto3.client("s3")
+def put_bucket_website(cdef):
+    bucket_name = eh.state.get("bucket_name")
 
     website_config = cdef.get("website_configuration")
     print(f"website_config = {website_config}")
@@ -497,8 +518,8 @@ def put_bucket_website(bucket_name, cdef):
             eh.add_log("Bucket Website Error", {"error": str(e)}, is_error=True)
 
 @ext(handler=eh, op="delete_bucket_website")
-def delete_bucket_website(bucket_name):
-    s3 = boto3.client("s3")
+def delete_bucket_website():
+    bucket_name = eh.state.get("bucket_name")
 
     try:
         _ = s3.delete_bucket_website(Bucket=bucket_name)
@@ -519,7 +540,9 @@ def delete_bucket_website(bucket_name):
 
 #Not implementing yet
 @ext(handler=eh, op="delete_bucket")
-def delete_bucket(bucket_name):
+def delete_bucket():
+    bucket_name = eh.state.get("bucket_name")
+    print(bucket_name)
     try:
         s3 = boto3.resource('s3')
         s3_bucket = s3.Bucket(bucket_name)
@@ -535,8 +558,11 @@ def delete_bucket(bucket_name):
         eh.add_log("Deleted Bucket", {"bucket_name": bucket_name})
 
     except botocore.exceptions.ClientError as e:
-        print(str(e))
-        eh.retry_error(str(e))
+        if e.response['Error']['Code'] == "NoSuchBucket":
+            eh.add_log("Bucket Does Not Exist, Continuing")
+        else:
+            print(str(e))
+            eh.retry_error(str(e))
         
 
 def gen_bucket_arn(bucket_name):
@@ -565,3 +591,5 @@ def generic_render_def(obj, update_f):
         return obj
     
 
+def generate_alternate_bucket_name():
+    return f"ck-{random_id()}"
