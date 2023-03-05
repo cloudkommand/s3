@@ -78,7 +78,7 @@
                     },
                     "bucket_policy": {
                         "type": "object",
-                        "description": "An inline IAM policy to attach to the S3 bucket. Your bucket should be in the Resource section of the policy"
+                        "description": "An inline IAM policy to attach to the S3 bucket. Use '#SELF#' to get the arn of your bucket. This ARN should be in the Resource section of the policy"
                     },
                     "CORS": {
                         "type": ["boolean", "object"],
