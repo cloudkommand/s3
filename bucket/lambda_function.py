@@ -467,7 +467,7 @@ def put_bucket_website(bucket_name, cdef):
     params = remove_none_attributes({
         "ErrorDocument": remove_none_attributes({"Key": website_config.get("error_document")}) or None,
         "IndexDocument": remove_none_attributes({"Suffix": website_config.get("index_document")}) or None,
-        "RedirectAllRequests": remove_none_attributes({
+        "RedirectAllRequestsTo": remove_none_attributes({
             "HostName": website_config.get("redirect_to"),
             "Protocol": website_config.get("redirect_protocol")
         }) or None,
