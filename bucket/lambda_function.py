@@ -319,6 +319,7 @@ def set_bucket_policy(cdef):
     bucket_name = eh.state.get("bucket_name")
 
     bucket_policy = render_bucket_policy(cdef.get("bucket_policy"), bucket_name)
+    print(f"Rendered Bucket Policy: {bucket_policy}")
     try:
         response = s3.put_bucket_policy(Bucket=bucket_name, Policy=json.dumps(bucket_policy))
         eh.add_log("Put Bucket Policy", response)
