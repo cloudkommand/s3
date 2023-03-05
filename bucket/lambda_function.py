@@ -574,7 +574,9 @@ def gen_bucket_link(bucket_name):
 
 
 def render_bucket_policy(policy, bucket_name):
+    print(f"policy = {policy}, bucket_name = {bucket_name}")
     arn = gen_bucket_arn(bucket_name)
+    print(f"ARN = {arn}")
     def update_f(string):
         return string.replace("$SELF$", arn)
 
