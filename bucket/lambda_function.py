@@ -572,13 +572,12 @@ def gen_bucket_arn(bucket_name):
 def gen_bucket_link(bucket_name):
     return f"https://s3.console.aws.amazon.com/s3/buckets/{bucket_name}?region=us-east-1&tab=objects"
 
-
 def render_bucket_policy(policy, bucket_name):
     print(f"policy = {policy}, bucket_name = {bucket_name}")
     arn = gen_bucket_arn(bucket_name)
     print(f"ARN = {arn}")
     def update_f(string):
-        return string.replace("$SELF$", arn)
+        return string.replace("$SELF$", arn).replace("#SELF#", arn)
 
     return generic_render_def(policy, update_f)
 
