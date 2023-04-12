@@ -136,6 +136,14 @@
                             }
                         },
                         "common": true
+                    },
+                    "default_kms_key_id": {
+                        "type": "string",
+                        "description": "The ARN of the KMS key to use for encrypting objects. If not provided, AES256 encryption will be used"
+                    },
+                    "bucket_key_enabled": {
+                        "type": "boolean",
+                        "description": "Set this to true to save on KMS costs if using default_kms_key_id. Defaults to true if using KMS (minimal downsides), and defaults to false if not using KMS."
                     }
                 }
             },

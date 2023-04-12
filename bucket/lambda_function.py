@@ -632,7 +632,7 @@ def get_bucket_encryption(cdef):
                         "SSEAlgorithm": "aws:kms" if cdef.get("default_kms_key_id") else "AES256",
                         "KMSMasterKeyID": cdef.get("default_kms_key_id")
                     },
-                    "BucketKeyEnabled": cdef.get("bucket_key_enabled")
+                    "BucketKeyEnabled": cdef.get("bucket_key_enabled", bool(cdef.get("default_kms_key_id")))
                 }
             ]
         }
