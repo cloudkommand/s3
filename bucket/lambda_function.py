@@ -195,6 +195,8 @@ def create_bucket(cdef, region, allow_alternate_bucket_name):
         if cdef.get("website_configuration"):
             eh.add_op("put_bucket_website")
 
+        eh.add_op("get_bucket_encryption")
+
         eh.add_props({
             "name": bucket_name,
             "arn": gen_bucket_arn(bucket_name),
