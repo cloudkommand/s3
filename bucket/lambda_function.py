@@ -642,7 +642,7 @@ def get_bucket_encryption(cdef):
     }
 
     try:
-        encryption = s3.get_bucket_encryption(Bucket=bucket_name).get("encryption")
+        encryption = s3.get_bucket_encryption(Bucket=bucket_name)
         eh.add_log("Got Bucket Encryption", {"encryption": encryption})
 
         if encryption['ServerSideEncryptionConfiguration'] != desired_encryption['ServerSideEncryptionConfiguration']:
