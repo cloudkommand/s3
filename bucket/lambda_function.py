@@ -466,7 +466,7 @@ def get_cors(cdef):
         eh.add_log("Got Bucket CORS", cors_config)
     except ClientError as e:
         if e.response['Error']['Code'] == "NoSuchCORSConfiguration":
-            cors_config = {}
+            cors_config = None
             eh.add_log("No Bucket CORS", {"bucket_name": bucket_name})
         else:
             handle_common_errors(e, eh, "Get Bucket CORS Error", 60)
