@@ -365,7 +365,7 @@ def delete_public_access_block():
 def get_bucket_policy(cdef):
     bucket_name = eh.state.get("bucket_name")
 
-    desired_bucket_policy = json.dumps(render_bucket_policy(cdef.get("bucket_policy") or {}, bucket_name), sort_keys=True)
+    desired_bucket_policy = json.dumps(render_bucket_policy(cdef.get("bucket_policy") or {}, bucket_name), sort_keys=True) if cdef.get("bucket_policy") else ""
     print(f"Rendered Bucket Policy: {desired_bucket_policy}")
     try:
         response = s3.get_bucket_policy(Bucket=bucket_name)
