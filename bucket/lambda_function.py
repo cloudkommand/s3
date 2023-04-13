@@ -59,7 +59,7 @@ def lambda_handler(event, context):
         put_bucket_website(cdef)
         delete_bucket_website()
         get_bucket_encryption(cdef)
-        put_bucket_encryption()
+        set_bucket_encryption()
         delete_bucket()
 
         return eh.finish()
