@@ -642,10 +642,10 @@ def get_bucket_encryption(cdef):
     }
 
     try:
-        encryption = s3.get_bucket_encryption(Bucket=bucket_name)
+        encryption = s3.get_bucket_encryption(Bucket=bucket_name).get("encryption")
         eh.add_log("Got Bucket Encryption", {"encryption": encryption})
 
-        if encryption != desired_encryption:
+        if encryption['ServerSideEncryptionConfiguration'] != desired_encryption['ServerSideEncryptionConfiguration']:
             eh.add_op("set_bucket_encryption", desired_encryption)
 
     except ClientError as e:
