@@ -460,7 +460,7 @@ def get_cors(cdef):
     bucket_name = eh.state.get("bucket_name")
 
     desired_cors_config = get_cors_config_from_cdef(cdef)
-
+    print(f"Desired CORS Config: {desired_cors_config}")
     try:
         cors_config = s3.get_bucket_cors(Bucket=bucket_name)
         eh.add_log("Got Bucket CORS", cors_config)
@@ -472,6 +472,7 @@ def get_cors(cdef):
             handle_common_errors(e, eh, "Get Bucket CORS Error", 60)
             return
 
+    print(f"Current CORS Config: {cors_config}")
     if cors_config != desired_cors_config:
         if desired_cors_config:
             eh.add_op("set_cors")
