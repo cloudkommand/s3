@@ -27,7 +27,7 @@ def lambda_handler(event, context):
         repo_id = event.get("repo_id")
         cname = event.get("component_name")
         bucket_name = prev_state.get("props", {}).get("name") or cdef.get("name") or component_safe_name(project_code, repo_id, cname, no_underscores=True, no_uppercase=True, max_chars=63)
-        allow_alternate_bucket_name = cdef.get("allow_alternate_bucket_name") or True
+        allow_alternate_bucket_name = cdef.get("allow_alternate_bucket_name", True)
         print(f"bucket_name = {bucket_name}")
 
         # Supporting alternate bucket names
@@ -42,7 +42,7 @@ def lambda_handler(event, context):
         elif event.get("op") == "delete":
             eh.add_op("delete_bucket")
 
-        get_bucket(cdef, region, prev_state)
+        get_bucket(cdef, region, prev_state, allow_alternate_bucket_name)
         create_bucket(cdef, region, allow_alternate_bucket_name)
         get_public_access_block(cdef)
         set_public_access_block(cdef)
@@ -75,7 +75,7 @@ def format_tags(tags_dict):
     return [{"Key": k, "Value": v} for k,v in tags_dict.items()]
 
 @ext(handler=eh, op="get_bucket")
-def get_bucket(cdef, region, prev_state):
+def get_bucket(cdef, region, prev_state, allow_alternate_bucket_name):
     bucket_name = eh.state.get("bucket_name")
 
     if prev_state and prev_state.get("props") and prev_state.get("props").get("name"):
@@ -97,7 +97,7 @@ def get_bucket(cdef, region, prev_state):
             return 0
         elif int(e.response['Error']['Code']) == 403:
             eh.add_log("Bucket Owned By Other Account", {"name": bucket_name})
-            if cdef.get("allow_alternate_bucket_name"):
+            if allow_alternate_bucket_name:
                 eh.state['bucket_name'] = generate_alternate_bucket_name()
                 eh.add_op("create_bucket")
             else:
@@ -177,7 +177,7 @@ def create_bucket(cdef, region, allow_alternate_bucket_name):
         if cdef.get("public_read") or cdef.get("acl"):
             eh.add_op("set_bucket_acl")
 
-        if cdef.get("block_public_access") or cdef.get("public_access_block"):
+        if ("block_public_access" in cdef) or ("public_access_block" in cdef):
             eh.add_op("set_public_access_block")
 
         if cdef.get("bucket_policy"):
@@ -744,6 +744,13 @@ def get_public_access_block_from_cdef(cdef):
             "IgnorePublicAcls": True,
             "BlockPublicPolicy": True,
             "RestrictPublicBuckets": True
+        }
+    elif (cdef.get("block_public_access") == False) or (cdef.get("public_access_block") == False):
+        desired_public_access_block = {
+            "BlockPublicAcls": False,
+            "IgnorePublicAcls": False,
+            "BlockPublicPolicy": False,
+            "RestrictPublicBuckets": False
         }
     
     else:
