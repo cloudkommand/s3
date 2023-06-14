@@ -73,9 +73,9 @@
                     },
                     "block_public_access": {
                         "type": "boolean",
-                        "description": "If true, puts the full public access block",
+                        "description": "If false, removes the full public access block",
                         "common": true,
-                        "default": false
+                        "default": true
                     },
                     "public_access_block": {
                         "type": "object",
@@ -168,7 +168,40 @@
             },
             "examples": [
                 {
-                    "displayname": ""
+                    "displayname": "S3 Bucket with Custom Name and Versioning",
+                    "notes": "This example creates an S3 bucket with a custom name and versioning enabled. Setting allow_alternate_bucket_name to false also will cause deployment to fail if the bucket name is already taken.",
+                    "definition": {
+                        "type": "&s3.bucket",
+                        "name": "this-bucket-name-that-i-chose",
+                        "versioning": true,
+                        "allow_alternate_bucket_name": false
+                    }
+                },
+                {
+                    "displayname": "S3 Bucket for Website Redirects",
+                    "notes": "This configuration creates an S3 bucket that redirects all requests to a different website. This is useful for redirecting from a naked domain to a www domain, or vice versa. This configuration also requires a route53.record component that points to the S3 bucket",
+                    "definition": {
+                        "type": "&s3.bucket",
+                        "name": "www.adomain.com",
+                        "block_public_access": false,
+                        "website_configuration": {
+                            "redirect_to": "adomain.com",
+                            "redirect_protocol": "http"
+                        },
+                        "bucket_policy": {
+                            "Version": "2012-10-17",
+                            "Id": "BucketPolicy",
+                            "Statement": [
+                                {
+                                    "Sid": "PublicReadForGetBucketObjects",
+                                    "Effect": "Allow",
+                                    "Principal": "*",
+                                    "Action": "s3:GetObject",
+                                    "Resource": "#SELF#/*"
+                                }
+                            ]
+                        }
+                    }
                 }
             ]
         },

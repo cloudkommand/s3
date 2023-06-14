@@ -27,7 +27,7 @@ def lambda_handler(event, context):
         repo_id = event.get("repo_id")
         cname = event.get("component_name")
         bucket_name = prev_state.get("props", {}).get("name") or cdef.get("name") or component_safe_name(project_code, repo_id, cname, no_underscores=True, no_uppercase=True, max_chars=63)
-        allow_alternate_bucket_name = cdef.get("allow_alternate_bucket_name") or True
+        allow_alternate_bucket_name = cdef.get("allow_alternate_bucket_name", True)
         print(f"bucket_name = {bucket_name}")
 
         # Supporting alternate bucket names
@@ -177,7 +177,7 @@ def create_bucket(cdef, region, allow_alternate_bucket_name):
         if cdef.get("public_read") or cdef.get("acl"):
             eh.add_op("set_bucket_acl")
 
-        if cdef.get("block_public_access") or cdef.get("public_access_block"):
+        if ("block_public_access" in cdef) or ("public_access_block" in cdef):
             eh.add_op("set_public_access_block")
 
         if cdef.get("bucket_policy"):
