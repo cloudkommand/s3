@@ -745,6 +745,13 @@ def get_public_access_block_from_cdef(cdef):
             "BlockPublicPolicy": True,
             "RestrictPublicBuckets": True
         }
+    elif (cdef.get("block_public_access") == False) or (cdef.get("public_access_block") == False):
+        desired_public_access_block = {
+            "BlockPublicAcls": False,
+            "IgnorePublicAcls": False,
+            "BlockPublicPolicy": False,
+            "RestrictPublicBuckets": False
+        }
     
     else:
         desired_public_access_block = cdef.get("public_access_block")
